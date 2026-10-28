@@ -1,0 +1,33 @@
+# Single configuration file: no Spring profiles. Secrets come from environment variables (see .env.example).
+spring:
+  application.name: capitulo-zero-api
+  threads.virtual.enabled: true
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate
+  flyway.locations: classpath:db/migration
+  docker.compose.lifecycle-management: start-only
+  modulith:
+    events:
+      externalization.enabled: true
+      republish-outstanding-events-on-restart: true
+      completion-mode: archive
+  kafka:
+    producer:
+      acks: all
+      properties.enable.idempotence: true
+cz:
+  security:
+    jwt:
+      issuer: capitulo-zero
+      secret: ${CZ_JWT_SECRET}
+    cors.origins: ${CZ_CORS_ORIGINS:}
+  events.resubmission:
+    interval: PT1M
+    older-than: PT1M
+springdoc:
+  api-docs.enabled: ${CZ_API_DOCS_ENABLED:false}
+  swagger-ui.enabled: ${CZ_API_DOCS_ENABLED:false}
+management:
+  endpoints.web.exposure.include: health,info
+  endpoint.health.show-details: never
