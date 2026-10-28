@@ -1,22 +1,22 @@
 # Capítulo Zero API
 
-Backend de uma livraria online, construído como **monólito modular** com Java 21, Spring Boot 4.1 e
-Spring Modulith. Tem catálogo com busca, carrinho, cupons, checkout com reserva de estoque, pagamento Pix
-simulado via webhook assinado, envio com rastreio, e-mails transacionais via Kafka e observabilidade com
-OpenTelemetry.
+Backend of an online bookstore, built as a **modular monolith** with Java 21, Spring Boot 4.1 and
+Spring Modulith. It has a catalog with search, cart, coupons, checkout with stock reservation, simulated Pix
+payment through a signed webhook, shipping with tracking, transactional e-mails through Kafka and observability
+with OpenTelemetry.
 
-Tudo roda localmente com `docker compose`, sem nenhuma conta ou chave de serviço externo.
+Everything runs locally with `docker compose`, without any external service account or key.
 
-> Projeto desenvolvido com *spec-driven development*: cada funcionalidade nasceu de uma especificação em
-> [`openspec/`](openspec/) antes do código. As specs consolidadas ficam em `openspec/specs/`.
+> Built with *spec-driven development*: every feature started as a specification in
+> [`openspec/`](openspec/) before the code. The merged specs live in `openspec/specs/`.
 
-## Arquitetura
+## Architecture
 
 ```mermaid
 flowchart LR
-    cliente["React (loja e admin)"] --> api["REST /api/v1"]
+    client["React (store and admin)"] --> api["REST /api/v1"]
     subgraph app["capitulo-zero-api"]
-        api --> mods["identidade · catalogo · estoque · carrinho<br/>pedidos · pagamentos · envio · notificacoes"]
+        api --> mods["identity · catalog · inventory · cart<br/>orders · payments · shipping · notifications"]
         mods --> outbox["outbox"]
     end
     mods --> pg[("PostgreSQL")]
@@ -25,40 +25,51 @@ flowchart LR
     kafka --> mods
 ```
 
-Detalhes, fluxo do checkout e máquina de estados do pedido em [`docs/arquitetura.md`](../capitulo-zero-api-harness/capitulo-zero-api/docs/arquitetura.md).
-Decisões em [`docs/adr/`](docs/adr/). Contrato de eventos em [`docs/eventos.md`](../capitulo-zero-api-harness/capitulo-zero-api/docs/eventos.md).
+Details, the checkout flow and the order state machine in [`docs/architecture.md`](docs/architecture.md).
+Decisions in [`docs/adr/`](docs/adr/). Event contract in [`docs/events.md`](docs/events.md).
+Canonical names in [`docs/glossary.md`](docs/glossary.md).
 
 ## Stack
 
-| Camada | Tecnologia |
+| Layer | Technology |
 |---|---|
-| Linguagem e framework | Java 21, Spring Boot 4.1, Spring Modulith 2.1, Lombok, MapStruct |
-| Dados | PostgreSQL 17 (um schema por módulo, Flyway), Redis |
-| Mensageria | Apache Kafka (KRaft), outbox do Spring Modulith |
-| Segurança | Spring Security 7, JWT, refresh token com rotação |
-| Qualidade | JUnit 5, Testcontainers, ArchUnit, JaCoCo, Spotless, GitHub Actions |
-| Observabilidade | OpenTelemetry, Grafana LGTM (métricas, logs e traces) |
+| Language and framework | Java 21, Spring Boot 4.1, Spring Modulith 2.1, Lombok, MapStruct |
+| Data | PostgreSQL 17 (one schema per module, Flyway), Redis |
+| Messaging | Apache Kafka (KRaft), Spring Modulith outbox |
+| Security | Spring Security 7, JWT, refresh token with rotation |
+| Quality | JUnit 5, Testcontainers, ArchUnit, JaCoCo, Spotless, GitHub Actions |
+| Observability | OpenTelemetry, Grafana LGTM (metrics, logs and traces) |
 
-## Como rodar
+## How to run
 
-Pré-requisitos: JDK 21 e Docker.
+Requirements: JDK 21 and Docker.
 
 ```bash
 docker compose up -d
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,demo
 ```
 
-| Serviço | URL |
+The application has a single `application.yaml` and no Spring profiles. Set the variables of
+[`.env.example`](.env.example) in your IDE run configuration (at least `CZ_JWT_SECRET`) and run
+`CapituloZeroApplication`, or from the shell:
+
+```bash
+export CZ_JWT_SECRET=local-development-secret-capitulo-zero-32-bytes-or-more
+export CZ_API_DOCS_ENABLED=true
+./mvnw spring-boot:run
+```
+
+| Service | URL |
 |---|---|
 | API | http://localhost:8080 |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
+| Swagger UI (`CZ_API_DOCS_ENABLED=true`) | http://localhost:8080/swagger-ui.html |
 | E-mails (Mailpit) | http://localhost:8025 |
 | Grafana | http://localhost:3000 |
+| Kafka UI (`docker compose --profile tools up -d`) | http://localhost:8090 |
 
 ## Endpoints
 
-<!-- Atualizado a cada change implementada. -->
+<!-- Updated with every implemented change. -->
 
 ## Status
 
-Implementação guiada pelo [roadmap](../capitulo-zero-api-harness/capitulo-zero-api/docs/roadmap.md).
+Implementation guided by the [roadmap](docs/roadmap.md).
